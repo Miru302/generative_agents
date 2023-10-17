@@ -4,8 +4,9 @@ Variables:
 !<INPUT 0>! -- init_persona_name
 
 <commentblockmarker>###</commentblockmarker>
+<s><SYS>You need to summarize the conversation in one sentence using json format</SYS>[INST]
 Conversation: 
 !<INPUT 0>!
 
-Summarize the conversation above in one sentence:
-This is a conversation about
+Summarize the conversation above in one sentence:[/INST]
+{"output":"This is a conversation about

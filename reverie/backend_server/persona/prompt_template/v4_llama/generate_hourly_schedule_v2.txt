@@ -9,9 +9,7 @@ Variables:
 !<INPUT 5>! -- prompt_ending
 
 <commentblockmarker>###</commentblockmarker>
-<s>[INST]<<SYS>>You are planning precise schedule for a given persona. Don't ask additional questions, only show the list. Hourly schedule format example: 
-!<INPUT 0>!
-<</SYS>>
+<s>[INST]<<SYS>>You are planning next item in the schedule for a given persona. Do NOT repeat the schedule.<</SYS>>
 !<INPUT 1>!
 prior schedule was like this:
 !<INPUT 2>!

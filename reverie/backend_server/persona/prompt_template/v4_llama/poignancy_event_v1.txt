@@ -18,6 +18,6 @@ Event: brushing teeth
 Event: a break up
 {"output":"9"}
 ---
-[INST]
+[/INST]
 Event: !<INPUT 3>!
 {"output":"

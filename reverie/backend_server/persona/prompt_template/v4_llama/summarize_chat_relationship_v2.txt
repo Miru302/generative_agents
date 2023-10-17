@@ -6,10 +6,11 @@ Variables:
 !<INPUT 2>! -- target_persona.scratch.name
 
 <commentblockmarker>###</commentblockmarker>
+[INST]
 [Statements]
 !<INPUT 0>!
 
 Based on the statements above, summarize !<INPUT 1>! and !<INPUT 2>!'s relationship. What do they feel or know about each other?
+The output should be a string that responds to the question.[/INST]
 
-
-"
+{"output":"
