@@ -104,3 +104,5 @@ ENV/
 PROBLEMS.txt
 debug_llm.py
 testing.py
+.vscode/settings.json
+environment/frontend_server/temp_storage/curr_step.json
