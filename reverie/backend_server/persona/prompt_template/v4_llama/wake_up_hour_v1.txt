@@ -1,0 +1,13 @@
+wake_up_hour_v1.txt
+
+Variables: 
+!<INPUT 0>! -- Identity Stable Set
+!<INPUT 1>! -- Lifestyle
+!<INPUT 2>! -- Persona first name
+
+<commentblockmarker>###</commentblockmarker>
+<s>[INST]<<SYS>>You are replying question about which hour a person wakes up. expamle answer: "6 am" or "8 am"<</SYS>>
+!<INPUT 0>!
+
+In general, !<INPUT 1>![/INST]
+!<INPUT 2>!'s wake up hour:
