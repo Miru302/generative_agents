@@ -117,7 +117,7 @@ def home(request):
   with open(f_curr_step) as json_file:  
     step = json.load(json_file)["step"]
 
-  os.remove(f_curr_step)
+  #os.remove(f_curr_step)
 
   persona_names = []
   persona_names_set = set()
@@ -289,8 +289,11 @@ def update_environment(request):
   response_data = {"<step>": -1}
   if (check_if_file_exists(f"storage/{sim_code}/movement/{step}.json")):
     with open(f"storage/{sim_code}/movement/{step}.json") as json_file: 
-      response_data = json.load(json_file)
-      response_data["<step>"] = step
+      try:
+        response_data = json.loads(json_file.read()) # fails because empty file?
+        response_data["<step>"] = step
+      except:
+        return JsonResponse(response_data)
 
   return JsonResponse(response_data)
 

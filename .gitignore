@@ -101,3 +101,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+PROBLEMS.txt
+debug_llm.py
+testing.py

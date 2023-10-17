@@ -150,7 +150,7 @@ class ReverieServer:
     
     curr_step = dict()
     curr_step["step"] = self.step
-    with open(f"{fs_temp_storage}/curr_step.json", "w") as outfile: 
+    with open(f"{fs_temp_storage}/curr_step.json", "w") as outfile: # Current Step needs to be updated for frontend refreshes
       outfile.write(json.dumps(curr_step, indent=2))
 
 
@@ -608,8 +608,8 @@ if __name__ == '__main__':
   #                    "July1_the_ville_isabella_maria_klaus-step-3-21")
   # rs.open_server()
 
-  origin = input("Enter the name of the forked simulation: ").strip()
-  target = input("Enter the name of the new simulation: ").strip()
+  origin = "base_the_ville_isabella_maria_klaus" #input("Enter the name of the forked simulation: ").strip() #TODO: remove debug code
+  target = "llama2_debug1_01" #input("Enter the name of the new simulation: ").strip()
 
   rs = ReverieServer(origin, target)
   rs.open_server()

@@ -217,9 +217,8 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
     return prompt_input
 
   def __func_clean_up(gpt_response, prompt=""):
-    cr = gpt_response.strip()
-    if cr[-1] == ".":
-      cr = cr[:-1]
+    cr = gpt_response.split('\n')[0]
+    cr = cr.strip(" .")
     return cr
 
   def __func_validate(gpt_response, prompt=""): 
@@ -388,7 +387,7 @@ def run_gpt_prompt_task_decomp(persona,
       
       # Ensure there are enough elements in k
       try:
-          duration = int(k[1].split(",")[0].strip(": "))
+          duration = int(k[1].split(",")[0].strip(").:"))
       except ValueError:
           # Handle the case when the conversion to int fails
           print(f"Error: Failed to convert '{k[1].split(',')[0].strip()}' to integer.")
@@ -397,7 +396,11 @@ def run_gpt_prompt_task_decomp(persona,
   
       cr += [[task, duration]]
 
-    total_expected_min = 60 #int(prompt.split("(total duration in minutes")[-1].split("):")[0].strip()) ##--> check if cr is empty
+    try:
+      #total_expected_min = int(prompt.split("(total duration in minutes")[-1].split("):")[0].strip()) ##--> check if cr is empty
+      total_expected_min = sum([x[1] for x in cr])
+    except:
+      total_expected_min = 60 #
     
     # TODO -- now, you need to make sure that this is the same as the sum of 
     #         the current action sequence. 
@@ -1647,7 +1650,7 @@ def run_gpt_prompt_summarize_conversation(persona, conversation, test_input=None
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/summarize_conversation_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/summarize_conversation_v1.txt" ########
   prompt_input = create_prompt_input(conversation, test_input)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "conversing about what to eat for lunch" ########
@@ -2301,7 +2304,7 @@ def run_gpt_prompt_agent_chat_summarize_relationship(persona, target_persona, st
 
   # ChatGPT Plugin ===========================================================
   def __chat_func_clean_up(gpt_response, prompt=""): ############
-    return gpt_response.split('"')[0].strip()
+    pass #return gpt_response.split('"')[0].strip() # WTF?! Why are you splitting hereeee?
 
   def __chat_func_validate(gpt_response, prompt=""): ############
     try: 
@@ -2314,7 +2317,7 @@ def run_gpt_prompt_agent_chat_summarize_relationship(persona, target_persona, st
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/summarize_chat_relationship_v2.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/summarize_chat_relationship_v2.txt" ########
   prompt_input = create_prompt_input(persona, target_persona, statements)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = 'Jane Doe is working on a project' ########
@@ -2817,6 +2820,7 @@ def run_gpt_generate_safety_score(persona, comment, test_input=None, verbose=Fal
 
 def extract_first_json_dict(data_str):
     # Find the first occurrence of a JSON object within the string
+    data_str = "{" + data_str # arhghghghhwhadekawhdlkawdla
     start_idx = data_str.find('{')
     end_idx = data_str.find('}', start_idx) + 1
 
@@ -2913,7 +2917,7 @@ def run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retr
     return cleaned_dict
 
   print ("11")
-  prompt_template = "persona/prompt_template/v3_ChatGPT/iterative_convo_v1.txt" 
+  prompt_template = "persona/prompt_template/v4_llama/iterative_convo_v1.txt" 
   prompt_input = create_prompt_input(maze, init_persona, target_persona, retrieved, curr_context, curr_chat) 
   print ("22")
   prompt = generate_prompt(prompt_input, prompt_template)

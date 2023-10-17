@@ -10,45 +10,26 @@ import openai
 import time 
 
 from utils import *
-from langchain.llms import Ollama
-from langchain.llms import OpenAI
 from langchain.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from sentence_transformers import SentenceTransformer
 
-# ============================================================================
-# ################### [Set LLM] ###################
-# ============================================================================
-
-### **** OpenAI **** 
-'''
-llm = OpenAI(temperature=0,model_name="gpt-3.5-turbo-16k")
-'''
-
-### **** Anthropic **** 
-'''
-llm = ChatAnthropic(model_name="claude-2", temperature=0)
-'''
-
-### *** Ollama (Llama2-13b) *** 
-''' 
-llm = Ollama(base_url="http://localhost:11434",
-              model="llama2",
-              callback_manager = CallbackManager([StreamingStdOutCallbackHandler()]))
-'''
-  
 ### *** Llama.cpp (Llama2-13b) *** ###
-n_gpu_layers = 1  # Metal set to 1 is enough.
-n_batch = 512  # Should be between 1 and n_ctx, consider the amount of RAM of your Apple Silicon Chip.
+n_gpu_layers = 10  
+n_batch = 512  # Should be between 1 and n_ctx
 callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 llm = LlamaCpp(
-    model_path="/Users/rlm/Desktop/Code/llama.cpp/llama-2-13b-chat.ggmlv3.q4_0.bin",
+    model_path="../../models/llama-2-13b-chat.ggmlv3.q2_K.bin",
     n_gpu_layers=n_gpu_layers,
     n_batch=n_batch,
     n_ctx=4096,
     f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
     callback_manager=callback_manager,
     verbose=True,
+    temperature=0.7,
+    max_tokens=128,
+    stop=['/n']  # doesn't seem to work?
 )
 
 def temp_sleep(seconds=0.1):
@@ -93,7 +74,7 @@ def GPT4_request(prompt):
     print ("ChatGPT ERROR")
     return "ChatGPT ERROR"
 
-def ChatGPT_request(prompt,parameters): 
+def ChatGPT_request(prompt): 
   """
   Given a prompt, make a request to LLM server and returns the response. 
   ARGS:
@@ -119,11 +100,12 @@ def ChatGPT_safe_generate_response(prompt,
                                    func_validate=None,
                                    func_clean_up=None,
                                    verbose=False): 
+  # Ayan: disabling all string manipulations outside of generations from the template. Such a bad desing!
   # prompt = 'GPT-3 Prompt:\n"""\n' + prompt + '\n"""\n'
-  prompt = '"""\n' + prompt + '\n"""\n'
-  prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
-  prompt += "Example output json:\n"
-  prompt += '{"output": "' + str(example_output) + '"}'
+  #prompt = '"""\n' + prompt + '\n"""\n'
+  #prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
+  #prompt += "Example output json:\n"
+  #prompt += '{"output": "' + str(example_output) + '"}' + '[/INST]/n{' # llama-2 change arghghghgh
 
   if verbose: 
     print ("LLM PROMPT")
@@ -133,8 +115,8 @@ def ChatGPT_safe_generate_response(prompt,
 
     try: 
       curr_gpt_response = ChatGPT_request(prompt).strip()
-      end_index = curr_gpt_response.rfind('}') + 1
-      curr_gpt_response = curr_gpt_response[:end_index]
+      end_index = curr_gpt_response.find('}') + 1
+      curr_gpt_response = '{"output":"'+curr_gpt_response[:end_index] # aaarrbhhhhrhrh this project is bad
       curr_gpt_response = json.loads(curr_gpt_response)["output"]
 
       # print ("---ashdfaf")
@@ -237,7 +219,7 @@ def safe_generate_response(prompt,
                            fail_safe_response="error",
                            func_validate=None,
                            func_clean_up=None,
-                           verbose=False): 
+                           verbose=debug): 
   if verbose: 
     print (prompt)
 
@@ -252,12 +234,20 @@ def safe_generate_response(prompt,
   return fail_safe_response
 
 
-def get_embedding(text, model="text-embedding-ada-002"):
+def get_embedding(text, model="../../models/sentence-transformers_all-MiniLM-L6-v2"):
   text = text.replace("\n", " ")
   if not text: 
     text = "this is blank"
-  return openai.Embedding.create(
-          input=[text], model=model)['data'][0]['embedding']
+  model = SentenceTransformer(model, device="cuda")
+  embeddings = model.encode(text)
+  return embeddings
+
+# def get_embedding(text, model="text-embedding-ada-002"):
+#   text = text.replace("\n", " ")
+#   if not text: 
+#     text = "this is blank"
+#   return openai.Embedding.create(
+#           input=[text], model=model)['data'][0]['embedding']
 
 
 if __name__ == '__main__':
