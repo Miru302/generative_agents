@@ -4,7 +4,11 @@ Variables:
 !<INPUT 0>! -- Action description
 
 <commentblockmarker>###</commentblockmarker>
-Convert an action description to an emoji (important: use two or less emojis).
-
+<s>[INST]<<SYS>>
+Convert an action description to an emoji (important: use two or less emojis) and put it in json format.
+<</SYS>>
+Example:
+Action description: having a morning shower
+{"output": "🛁🧖"}[/INST]
 Action description: !<INPUT 0>!
-Emoji:
+{"output":"

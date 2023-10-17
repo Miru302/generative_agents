@@ -8,9 +8,19 @@ Variables:
 !<INPUT 4>! -- Object name 
 
 <commentblockmarker>###</commentblockmarker>
-Task: We want to understand the state of an object that is being used by someone. 
-
-Let's think step by step. 
-We want to know about !<INPUT 0>!'s state. 
-Step 1. !<INPUT 1>! is at/using the !<INPUT 2>!.
-Step 2. Describe the !<INPUT 3>!'s state: !<INPUT 4>! is
+<s>[INST]<<SYS>>
+Task: We want to understand the state of an object that is being used by someone. The output should be in json and ONLY contain one phrase.
+<</SYS>>
+Output the response to the prompt above in json.
+Examples: 
+---
+Michael is cooking, what is the state of the stove?
+output json:
+{"output": "being used"}
+---
+Donald is sleeping, what is the state of the TV?
+output json:
+{"output": "turned off"}
+[/INST]
+If !<INPUT 1>! is !<INPUT 2>!, what is the state of !<INPUT 3>!?
+{"output":"

@@ -6,8 +6,10 @@ Variables:
 !<INPUT 2>! -- Persona's full name. 
 
 <commentblockmarker>###</commentblockmarker>
+<s>[INST]<<SYS>>
 Task: Turn the input into (subject, predicate, object). 
-
+<</SYS>>
+Examples:
 Input: Sam Johnson is eating breakfast. 
 Output: (Dolores Murphy, eat, breakfast) 
 --- 
@@ -25,6 +27,6 @@ Output: (Percy Liang, teach, students)
 ---
 Input: Merrie Morris is running on a treadmill. 
 Output: (Merrie Morris, run, treadmill)
----
+[/INST]
 Input: !<INPUT 0>! is !<INPUT 1>!. 
 Output: (!<INPUT 2>!,

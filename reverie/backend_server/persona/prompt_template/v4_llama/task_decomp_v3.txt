@@ -11,8 +11,9 @@ Variables:
 !<INPUT 7>! -- Persona first names
 
 <commentblockmarker>###</commentblockmarker>
-Describe subtasks in 5 min increments. 
----
+<s>[INST]<<SYS>>
+Describe subtasks in 5 min increments. <</SYS>>
+Example:
 Name: Kelly Bronson
 Age: 35
 Backstory: Kelly always wanted to be a teacher, and now she teaches kindergarten. During the week, she dedicates herself to her students, but on the weekends, she likes to try out new restaurants and hang out with friends. She is very warm and friendly, and loves caring for others.
@@ -32,7 +33,7 @@ In 5 min increments, list the subtasks Kelly does when Kelly is working on the n
 7) Kelly is making final changes to the lesson plan. (duration in minutes: 15, minutes left: 15)
 8) Kelly is printing the lesson plan. (duration in minutes: 10, minutes left: 5)
 9) Kelly is putting the lesson plan in her bag. (duration in minutes: 5, minutes left: 0)
----
+[/INST]
 !<INPUT 0>!
 !<INPUT 1>!
 In 5 min increments, list the subtasks !<INPUT 2>! does when !<INPUT 3>! is !<INPUT 4>! from !<INPUT 5>! (total duration in minutes !<INPUT 6>!): 

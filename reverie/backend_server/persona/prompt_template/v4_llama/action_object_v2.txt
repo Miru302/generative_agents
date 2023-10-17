@@ -3,6 +3,7 @@ Variables:
 !<INPUT 1>! -- Objects available
 
 <commentblockmarker>###</commentblockmarker>
+<s>[INST]<<SYS>>Pick ONE most relevant object from the objects available<</SYS>>
 Current activity: sleep in bed
 Objects available: {bed, easel, closet, painting}
 Pick ONE most relevant object from the objects available: bed
@@ -26,7 +27,7 @@ Pick ONE most relevant object from the objects available: desk
 Current activity: talk on the phone
 Objects available: {phone, charger, bed, nightstand}
 Pick ONE most relevant object from the objects available: phone
----
+[/INST]
 Current activity: !<INPUT 0>!
 Objects available: {!<INPUT 1>!}
-Pick ONE most relevant object from the objects available:
+Pick ONE most relevant object from the objects available: 
