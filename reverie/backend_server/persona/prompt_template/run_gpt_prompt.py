@@ -54,7 +54,7 @@ def run_gpt_prompt_wake_up_hour(persona, test_input=None, verbose=False):
     return prompt_input
 
   def __func_clean_up(gpt_response, prompt=""):
-    cr = int(gpt_response.strip().lower().split("am")[0])
+    cr = int(gpt_response.strip().lower().split(" ")[0]) # llama_changes
     return cr
   
   def __func_validate(gpt_response, prompt=""): 
@@ -69,7 +69,7 @@ def run_gpt_prompt_wake_up_hour(persona, test_input=None, verbose=False):
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 5, 
              "temperature": 0.8, "top_p": 1, "stream": False,
              "frequency_penalty": 0, "presence_penalty": 0, "stop": ["\n"]}
-  prompt_template = "persona/prompt_template/v2/wake_up_hour_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/wake_up_hour_v1.txt" # llama_template
   prompt_input = create_prompt_input(persona, test_input)
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe()
@@ -141,7 +141,7 @@ def run_gpt_prompt_daily_plan(persona,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 500, 
                "temperature": 1, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v2/daily_planning_v6.txt"
+  prompt_template = "persona/prompt_template/v4_llama/daily_planning_v6.txt" # llama_changes
   prompt_input = create_prompt_input(persona, wake_up_hour, test_input)
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe()
@@ -188,13 +188,13 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
     if p_f_ds_hourly_org: 
       prior_schedule = "\n"
       for count, i in enumerate(p_f_ds_hourly_org): 
-        prior_schedule += f"[(ID:{get_random_alphanumeric()})" 
+        prior_schedule += f"["  # Why they add those alphanumerics (ID:Rib6cp) for llm???
         prior_schedule += f" {persona.scratch.get_str_curr_date_str()} --"
         prior_schedule += f" {hour_str[count]}] Activity:"
         prior_schedule += f" {persona.scratch.get_str_firstname()}"
         prior_schedule += f" is {i}\n"
 
-    prompt_ending = f"[(ID:{get_random_alphanumeric()})"
+    prompt_ending = f"["
     prompt_ending += f" {persona.scratch.get_str_curr_date_str()}"
     prompt_ending += f" -- {curr_hour_str}] Activity:"
     prompt_ending += f" {persona.scratch.get_str_firstname()} is"
@@ -268,7 +268,7 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 50, 
                "temperature": 0.5, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": ["\n"]}
-  prompt_template = "persona/prompt_template/v2/generate_hourly_schedule_v2.txt"
+  prompt_template = "persona/prompt_template/v4_llama/generate_hourly_schedule_v2.txt" #llama_changes
   prompt_input = create_prompt_input(persona, 
                                      curr_hour_str, 
                                      p_f_ds_hourly_org,
@@ -361,30 +361,34 @@ def run_gpt_prompt_task_decomp(persona,
     print (gpt_response)
     print ("-==- -==- -==- ")
 
-    # TODO SOMETHING HERE sometimes fails... See screenshot
-    temp = [i.strip() for i in gpt_response.split("\n")]
+    # TODO SOMETHING HERE sometimes fails... See screenshot # not sometimes...most of the times..
+    temp_old = [i.strip() for i in gpt_response.split("\n")] # llama sometimes puts duration in minutes in a new line.. this code is a mess
+    if any(t.startswith("(duration") for t in temp_old):
+      temp = [x for x in [(" ".join([temp_old[i-1].strip(),temp_old[i].strip()]) if c.startswith("(duration") else None) for i,c in enumerate(temp_old)] if x] # hahahahaha
+    else:
+      temp = temp_old
     _cr = []
     cr = []
     for count, i in enumerate(temp): 
       if count != 0: 
-        _cr += [" ".join([j.strip () for j in i.split(" ")][3:])]
+        _cr += [" ".join([j.strip () for j in i.split(" ")][3:])] # wtf... why removing first 3 words. usually task number and a name, but wtf..
       else: 
         _cr += [i]
     for count, i in enumerate(_cr): 
-      k = [j.strip() for j in i.split("(duration in minutes:")]
+      k = [j.strip() for j in i.split("(duration in minutes")] # WTF. You do really expect these words everytime AND a semicolon huh..
       # Ensure there are enough elements in k
       if len(k) < 2:
           print(f"Warning: Unexpected string structure in '{i}'. Missing '(duration in minutes:' delimiter.")
           continue
     
       task = k[0]
-      # Error thrown when task string is empty 
+      # Error thrown when task string is empty # WTF. and it have to end with a dot?..
       if task and task[-1] == ".": 
         task = task[:-1]
       
       # Ensure there are enough elements in k
       try:
-          duration = int(k[1].split(",")[0].strip())
+          duration = int(k[1].split(",")[0].strip(": "))
       except ValueError:
           # Handle the case when the conversion to int fails
           print(f"Error: Failed to convert '{k[1].split(',')[0].strip()}' to integer.")
@@ -393,12 +397,11 @@ def run_gpt_prompt_task_decomp(persona,
   
       cr += [[task, duration]]
 
-    total_expected_min = int(prompt.split("(total duration in minutes")[-1]
-                                   .split("):")[0].strip())
+    total_expected_min = 60 #int(prompt.split("(total duration in minutes")[-1].split("):")[0].strip()) ##--> check if cr is empty
     
     # TODO -- now, you need to make sure that this is the same as the sum of 
     #         the current action sequence. 
-    curr_min_slot = [["dummy", -1],] # (task_name, task_index)
+    curr_min_slot = [["dummy", -1],] # (task_name, task_index) 
     for count, i in enumerate(cr): 
       i_task = i[0] 
       i_duration = i[1]
@@ -444,7 +447,7 @@ def run_gpt_prompt_task_decomp(persona,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 1000, 
              "temperature": 0, "top_p": 1, "stream": False,
              "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v2/task_decomp_v3.txt"
+  prompt_template = "persona/prompt_template/v4_llama/task_decomp_v3.txt" # llama_changes
   prompt_input = create_prompt_input(persona, task, duration)
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe()
@@ -620,7 +623,7 @@ def run_gpt_prompt_action_sector(action_description,
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v1/action_location_sector_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/action_location_sector_v1.txt" # llama_changes
   prompt_input = create_prompt_input(action_description, persona, maze)
   prompt = generate_prompt(prompt_input, prompt_template)
 
@@ -717,7 +720,7 @@ def run_gpt_prompt_action_arena(action_description,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v1/action_location_object_vMar11.txt"
+  prompt_template = "persona/prompt_template/v4_llama/action_location_object_v1.txt" # llama changes
   prompt_input = create_prompt_input(action_description, persona, maze, act_world, act_sector)
   prompt = generate_prompt(prompt_input, prompt_template)
 
@@ -773,7 +776,7 @@ def run_gpt_prompt_action_game_object(action_description,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v1/action_object_v2.txt"
+  prompt_template = "persona/prompt_template/v4_llama/action_object_v2.txt" # llama_changes
   prompt_input = create_prompt_input(action_description, 
                                      persona, 
                                      temp_address, 
@@ -843,7 +846,7 @@ def run_gpt_prompt_pronunciatio(action_description, persona, verbose=False):
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/generate_pronunciatio_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/generate_pronunciatio_v1.txt" ######## # llama_changes
   prompt_input = create_prompt_input(action_description)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "🛁🧖‍♀️" ########
@@ -951,7 +954,7 @@ def run_gpt_prompt_event_triple(action_description, persona, verbose=False):
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 30, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": ["\n"]}
-  prompt_template = "persona/prompt_template/v2/generate_event_triple_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/generate_event_triple_v1.txt" # llama_changes
   prompt_input = create_prompt_input(action_description, persona)
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe(persona) ########
@@ -1019,7 +1022,7 @@ def run_gpt_prompt_act_obj_desc(act_game_object, act_desp, persona, verbose=Fals
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/generate_obj_event_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/generate_obj_event_v1.txt" ######## # llama_changes
   prompt_input = create_prompt_input(act_game_object, act_desp, persona)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "being fixed" ########
@@ -1084,7 +1087,7 @@ def run_gpt_prompt_act_obj_event_triple(act_game_object, act_obj_desc, persona, 
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 30, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": ["\n"]}
-  prompt_template = "persona/prompt_template/v2/generate_event_triple_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/generate_event_triple_v1.txt" # llama_changes
   prompt_input = create_prompt_input(act_game_object, act_obj_desc)
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe(act_game_object)
@@ -1224,7 +1227,7 @@ def run_gpt_prompt_new_decomp_schedule(persona,
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 1000, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v2/new_decomp_schedule_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/new_decomp_schedule_v1.txt" # llama_changes
   prompt_input = create_prompt_input(persona, 
                                      main_act_dur, 
                                      truncated_act_dur, 
@@ -1338,7 +1341,7 @@ def run_gpt_prompt_decide_to_talk(persona, target_persona, retrieved,test_input=
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 20, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v2/decide_to_talk_v2.txt"
+  prompt_template = "persona/prompt_template/v4_llama/decide_to_talk_v2.txt" # llama_changes
   prompt_input = create_prompt_input(persona, target_persona, retrieved,
                                      test_input)
   prompt = generate_prompt(prompt_input, prompt_template)
@@ -1436,7 +1439,7 @@ def run_gpt_prompt_decide_to_react(persona, target_persona, retrieved,test_input
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 20, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v2/decide_to_react_v1.txt"
+  prompt_template = "persona/prompt_template/v4_llama/decide_to_react_v1.txt" # llama_changes
   prompt_input = create_prompt_input(persona, target_persona, retrieved,
                                      test_input)
   prompt = generate_prompt(prompt_input, prompt_template)
@@ -1897,7 +1900,7 @@ def run_gpt_prompt_event_poignancy(persona, event_description, test_input=None, 
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/poignancy_event_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/poignancy_event_v1.txt" ######## # llama_changes
   prompt_input = create_prompt_input(persona, event_description)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "5" ########
@@ -1968,7 +1971,7 @@ def run_gpt_prompt_thought_poignancy(persona, event_description, test_input=None
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/poignancy_thought_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/poignancy_thought_v1.txt" ######## # llama_changes
   prompt_input = create_prompt_input(persona, event_description)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "5" ########
@@ -2040,7 +2043,7 @@ def run_gpt_prompt_chat_poignancy(persona, event_description, test_input=None, v
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/poignancy_chat_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/poignancy_chat_v1.txt" ######## llama_changes
   prompt_input = create_prompt_input(persona, event_description)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "5" ########
@@ -2116,7 +2119,7 @@ def run_gpt_prompt_focal_pt(persona, statements, n, test_input=None, verbose=Fal
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
-  prompt_template = "persona/prompt_template/v3_ChatGPT/generate_focal_pt_v1.txt" ########
+  prompt_template = "persona/prompt_template/v4_llama/generate_focal_pt_v1.txt" ######## llama_changes
   prompt_input = create_prompt_input(persona, statements, n)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = '["What should Jane do for lunch", "Does Jane like strawberry", "Who is Jane"]' ########
